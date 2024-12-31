@@ -2,9 +2,8 @@ import express from 'express';
 const router = express.Router();
 import fetch from 'node-fetch';
 
-// ROUTES
-// ROUTE PRINCIPALE
-router.post('/createZoomAppointment', async (req, res) => {
+// ROUTE POUR LA CREATION D'UN MEETING ZOOM
+router.post('/createZoomMeeting', async (req, res) => {
     const param = {
         "agenda": "My Meetings",
         "duration": req.body.duration,
@@ -16,10 +15,31 @@ router.post('/createZoomAppointment', async (req, res) => {
 
     try {
         const token = await getOAuth2Token();
-        const data = await createZoomAppointment(token, param);
+        const data = await createZoomMeeting(token, param);
 
         res.status(200).send({
             message: 'Le meeting a été créé correctement',
+            data,
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'appel API vers Zoom:', error.message);
+
+        res.status(500).send({
+            message: 'Erreur lors de l\'appel API vers Zoom',
+            error: error.message,
+        });
+    }
+});
+
+// ROUTE POUR LA SUPPRESSION D'UN MEETING ZOOM
+router.post('/deleteZoomMeeting', async (req, res) => {
+    const uuid = req.body.zoomId;
+    try {
+        const token = await getOAuth2Token();
+        const data = await deleteZoomMeeting(token, uuid);
+
+        res.status(200).send({
+            message: 'Le meeting a été supprimé correctement',
             data,
         });
     } catch (error) {
@@ -57,9 +77,8 @@ async function getOAuth2Token() {
     return data.access_token;
 }
 
-// CREATION DU MEETING ZOOM
-async function createZoomAppointment(token, param) {
-    console.log(JSON.stringify(param))
+// FONCTION DE CREATION DU MEETING ZOOM
+async function createZoomMeeting(token, param) {
     const response = await fetch('https://api.zoom.us/v2/users/me/meetings', {
         method: 'POST',
         headers: {
@@ -73,6 +92,22 @@ async function createZoomAppointment(token, param) {
     }
 
     return response.json();
+}
+
+// FONCTION DE SUPPRESSION DU MEETING ZOOM
+async function deleteZoomMeeting(token, id) {
+    console.log(`https://api.zoom.us/v2/meetings/${id}`);
+    const response = await fetch(`https://api.zoom.us/v2/meetings/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    });
+    if (!response.ok) {
+        throw new Error(`Echec lors de la suppression du meeting : ${response.status} ${response.statusText}`);
+    }
+
+    return response;
 }
 
 export default router;
