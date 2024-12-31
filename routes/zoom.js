@@ -5,13 +5,12 @@ import fetch from 'node-fetch';
 // ROUTES
 // ROUTE PRINCIPALE
 router.post('/createZoomAppointment', async (req, res) => {
-    //const { param } = req.body;
     const param = {
         "agenda": "My Meetings",
-        "duration": 30,
-        "start_time": "2024-12-31T16:00:00",
+        "duration": req.body.duration,
+        "start_time": req.body.start_time,
         "timezone": "Europe/Paris",
-        "topic": "Screening meeting",
+        "topic": req.body.topic,
         "type": 2
     }
 
@@ -60,6 +59,7 @@ async function getOAuth2Token() {
 
 // CREATION DU MEETING ZOOM
 async function createZoomAppointment(token, param) {
+    console.log(JSON.stringify(param))
     const response = await fetch('https://api.zoom.us/v2/users/me/meetings', {
         method: 'POST',
         headers: {
